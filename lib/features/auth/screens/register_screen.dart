@@ -28,7 +28,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       // Inserción directa en la tabla 'users' que creamos en Supabase
-      await Supabase.instance.client.from('users').insert({
+      await Supabase.instance.client.from('user').insert({
         'email': email,
         'full_name': fullName,
       });
