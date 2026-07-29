@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:country_flags/country_flags.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'features/auth/screens/register_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     url: 'https://eficwfdiudoiuufgqtuo.supabase.co',
-    anonKey: 'sb_publishable__qygqExiL9toOS3Xcon3DQ_23e40KUl',
+    publishableKey: 'sb_publishable__qygqExiL9toOS3Xcon3DQ_23e40KUl',
   );
 
   runApp(const TalenttopsApp());
@@ -458,7 +457,7 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const RegisterScreen()),
+                          builder: (context) => const SeleccionGeneroScreen()),
                     );
                   },
                   child: const Text(
@@ -640,7 +639,7 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
 }
 
 // ==========================================
-// 2. SELECCIÓN DE GÉNERO / PANTALLA SIGUIENTE
+// REGISTRO WEB PÚBLICO (SeleccionGeneroScreen)
 // ==========================================
 
 class SeleccionGeneroScreen extends StatefulWidget {
@@ -651,108 +650,135 @@ class SeleccionGeneroScreen extends StatefulWidget {
 }
 
 class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
-  String? _generoSeleccionado;
   String _paisSeleccionado = 'PE'; // Código por defecto para Perú
+  String _codigoTelefono = '+51'; // Código telefónico por defecto
 
   final _nombreController = TextEditingController();
   final _correoController = TextEditingController();
+  final _telefonoController = TextEditingController();
   final _documentoController = TextEditingController();
   final _rucController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // Lista de países de América con sus códigos ISO oficiales para las banderas a color
+  // Lista de países de América con códigos ISO y prefijos telefónicos oficiales
   final List<Map<String, String>> _paisesAmerica = [
-    {'codigo': 'AR', 'nombre': 'Argentina'},
-    {'codigo': 'BO', 'nombre': 'Bolivia'},
-    {'codigo': 'BR', 'nombre': 'Brasil'},
-    {'codigo': 'CA', 'nombre': 'Canadá'},
-    {'codigo': 'CL', 'nombre': 'Chile'},
-    {'codigo': 'CO', 'nombre': 'Colombia'},
-    {'codigo': 'CR', 'nombre': 'Costa Rica'},
-    {'codigo': 'CU', 'nombre': 'Cuba'},
-    {'codigo': 'EC', 'nombre': 'Ecuador'},
-    {'codigo': 'SV', 'nombre': 'El Salvador'},
-    {'codigo': 'US', 'nombre': 'Estados Unidos'},
-    {'codigo': 'GT', 'nombre': 'Guatemala'},
-    {'codigo': 'HN', 'nombre': 'Honduras'},
-    {'codigo': 'MX', 'nombre': 'México'},
-    {'codigo': 'NI', 'nombre': 'Nicaragua'},
-    {'codigo': 'PA', 'nombre': 'Panamá'},
-    {'codigo': 'PY', 'nombre': 'Paraguay'},
-    {'codigo': 'PE', 'nombre': 'Perú'},
-    {'codigo': 'DO', 'nombre': 'República Dominicana'},
-    {'codigo': 'UY', 'nombre': 'Uruguay'},
-    {'codigo': 'VE', 'nombre': 'Venezuela'},
+    {'codigo': 'AR', 'nombre': 'Argentina', 'prefijo': '+54'},
+    {'codigo': 'BO', 'nombre': 'Bolivia', 'prefijo': '+591'},
+    {'codigo': 'BR', 'nombre': 'Brasil', 'prefijo': '+55'},
+    {'codigo': 'CA', 'nombre': 'Canadá', 'prefijo': '+1'},
+    {'codigo': 'CL', 'nombre': 'Chile', 'prefijo': '+56'},
+    {'codigo': 'CO', 'nombre': 'Colombia', 'prefijo': '+57'},
+    {'codigo': 'CR', 'nombre': 'Costa Rica', 'prefijo': '+506'},
+    {'codigo': 'CU', 'nombre': 'Cuba', 'prefijo': '+53'},
+    {'codigo': 'EC', 'nombre': 'Ecuador', 'prefijo': '+593'},
+    {'codigo': 'SV', 'nombre': 'El Salvador', 'prefijo': '+503'},
+    {'codigo': 'US', 'nombre': 'Estados Unidos', 'prefijo': '+1'},
+    {'codigo': 'GT', 'nombre': 'Guatemala', 'prefijo': '+502'},
+    {'codigo': 'HN', 'nombre': 'Honduras', 'prefijo': '+504'},
+    {'codigo': 'MX', 'nombre': 'México', 'prefijo': '+52'},
+    {'codigo': 'NI', 'nombre': 'Nicaragua', 'prefijo': '+505'},
+    {'codigo': 'PA', 'nombre': 'Panamá', 'prefijo': '+507'},
+    {'codigo': 'PY', 'nombre': 'Paraguay', 'prefijo': '+595'},
+    {'codigo': 'PE', 'nombre': 'Perú', 'prefijo': '+51'},
+    {'codigo': 'DO', 'nombre': 'República Dominicana', 'prefijo': '+1'},
+    {'codigo': 'UY', 'nombre': 'Uruguay', 'prefijo': '+598'},
+    {'codigo': 'VE', 'nombre': 'Venezuela', 'prefijo': '+58'},
   ];
 
-  void _procesarRegistro() {
-    if (_passwordController.text != _confirmPasswordController.text) {
+  Future<void> _procesarRegistro() async {
+    if (_nombreController.text.isEmpty ||
+        _correoController.text.isEmpty ||
+        _telefonoController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Las contraseñas no coinciden'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_nombreController.text.isEmpty || _correoController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor complete los campos obligatorios'),
+          content: Text('Por favor completa Nombre, Correo y Teléfono'),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.mark_email_unread_rounded, color: Color(0xFF0A66C2)),
-            SizedBox(width: 8),
-            Text('¡Verifica tu cuenta!'),
+    try {
+      // 1. Registrar al usuario en el sistema de autenticación de Supabase
+      final AuthResponse response = await Supabase.instance.client.auth.signUp(
+        email: _correoController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      final User? user = response.user;
+
+      if (user != null) {
+        // 2. Guardar los datos detallados en tu tabla 'user' del Table Editor
+        await Supabase.instance.client.from('user').insert({
+          'id': user.id,
+          'full_name': _nombreController.text.trim(),
+          'email': _correoController.text.trim(),
+          'pais': _paisSeleccionado,
+          'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
+          'documento': _documentoController.text.trim(),
+          'ruc': _rucController.text.trim(),
+        });
+      }
+
+      if (!mounted) return;
+
+      // 3. Mostrar diálogo de verificación de correo
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.mark_email_unread_rounded, color: Color(0xFF0A66C2)),
+              SizedBox(width: 8),
+              Text('¡Verifica tu cuenta!'),
+            ],
+          ),
+          content: const Text(
+            'Hemos enviado un correo electrónico de confirmación a tu bandeja de entrada.\n\n'
+            'Haz clic en el botón "Aceptar solicitud" del mensaje para activar tu cuenta.',
+            style: TextStyle(fontSize: 14, height: 1.4),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0A66C2),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SimuladorCorreoScreen(),
+                  ),
+                );
+              },
+              child: const Text('Enviar correo de confirmación',
+                  style: TextStyle(color: Colors.white)),
+            ),
           ],
         ),
-        content: const Text(
-          'Hemos enviado un correo electrónico de confirmación a tu bandeja de entrada.\n\n'
-          'Para activar tu cuenta y poder ingresar, debes hacer clic en el botón "Aceptar solicitud" que figura en el mensaje.',
-          style: TextStyle(fontSize: 14, height: 1.4),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error en el registro: $e'),
+          backgroundColor: Colors.red,
         ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0A66C2),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SimuladorCorreoScreen(),
-                ),
-              );
-            },
-            child: const Text('Enviar correo de confirmación',
-                style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registro en Talenttops'),
+        title: const Text('Registro Talenttops'),
         backgroundColor: const Color(0xFFF8F9FA),
         elevation: 0,
       ),
@@ -804,7 +830,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Selector de País con Banderas Reales a Color
+              // Selector de País con Banderas y actualización de prefijo
               DropdownButtonFormField<String>(
                 value: _paisSeleccionado,
                 decoration: InputDecoration(
@@ -825,16 +851,58 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                           width: 26,
                         ),
                         const SizedBox(width: 12),
-                        Text(pais['nombre']!),
+                        Text('${pais['nombre']} (${pais['prefijo']})'),
                       ],
                     ),
                   );
                 }).toList(),
                 onChanged: (String? nuevoCodigo) {
-                  setState(() {
-                    _paisSeleccionado = nuevoCodigo!;
-                  });
+                  if (nuevoCodigo != null) {
+                    setState(() {
+                      _paisSeleccionado = nuevoCodigo;
+                      final paisEncontrado = _paisesAmerica
+                          .firstWhere((p) => p['codigo'] == nuevoCodigo);
+                      _codigoTelefono = paisEncontrado['prefijo']!;
+                    });
+                  }
                 },
+              ),
+              const SizedBox(height: 16),
+
+              // Fila de Número Telefónico con Prefijo de País Automático
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _codigoTelefono,
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _telefonoController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: 'Número telefónico',
+                        prefixIcon: const Icon(Icons.phone_iphone_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 
@@ -896,49 +964,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Sección de Género Inclusiva
-              const Text(
-                'Género',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              RadioListTile<String>(
-                title: const Text('Masculino'),
-                value: 'Masculino',
-                groupValue: _generoSeleccionado,
-                onChanged: (value) {
-                  setState(() {
-                    _generoSeleccionado = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Femenino'),
-                value: 'Femenino',
-                groupValue: _generoSeleccionado,
-                onChanged: (value) {
-                  setState(() {
-                    _generoSeleccionado = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Otro / Prefiero no decirlo'),
-                value: 'Otro',
-                groupValue: _generoSeleccionado,
-                onChanged: (value) {
-                  setState(() {
-                    _generoSeleccionado = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 40),
-
-              // Botón de Completar Registro
+              // Botón de Registro
               ElevatedButton(
                 onPressed: _procesarRegistro,
                 style: ElevatedButton.styleFrom(
@@ -949,7 +975,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Completar Registro',
+                  'Regístrate con tu correo',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
