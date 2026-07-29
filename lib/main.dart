@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:country_flags/country_flags.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -652,6 +654,25 @@ class SeleccionGeneroScreen extends StatefulWidget {
 class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
   String _paisSeleccionado = 'PE'; // Código por defecto para Perú
   String _codigoTelefono = '+51'; // Código telefónico por defecto
+  String? _generoSeleccionado;
+  Uint8List? _webImageBytes;
+  String? _fotoUrl;
+  Future<void> _seleccionarFoto() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      setState(() {
+        _webImageBytes = bytes;
+      });
+    }
+  }
 
   final _nombreController = TextEditingController();
   final _correoController = TextEditingController();
@@ -700,7 +721,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
     }
 
     try {
-      // 1. Registrar al usuario en el sistema de autenticación de Supabase
       final AuthResponse response = await Supabase.instance.client.auth.signUp(
         email: _correoController.text.trim(),
         password: _passwordController.text.trim(),
@@ -709,7 +729,19 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
       final User? user = response.user;
 
       if (user != null) {
-        // 2. Guardar los datos detallados en tu tabla 'user' del Table Editor
+        if (_webImageBytes != null) {
+          final fileName =
+              '${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+          await Supabase.instance.client.storage
+              .from('avatars')
+              .uploadBinary(fileName, _webImageBytes!);
+
+          _fotoUrl = Supabase.instance.client.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+        }
+
         await Supabase.instance.client.from('user').insert({
           'id': user.id,
           'full_name': _nombreController.text.trim(),
@@ -718,12 +750,13 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
           'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
           'documento': _documentoController.text.trim(),
           'ruc': _rucController.text.trim(),
+          'genero': _generoSeleccionado ?? 'No especificado',
+          'foto': _fotoUrl,
         });
       }
 
       if (!mounted) return;
 
-      // 3. Mostrar diálogo de verificación de correo
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -788,6 +821,67 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: GestureDetector(
+                  onTap: _seleccionarFoto,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.grey[200],
+                          border: Border.all(
+                              color: const Color(0xFF0A66C2), width: 2),
+                          image: _webImageBytes != null
+                              ? DecorationImage(
+                                  image: MemoryImage(_webImageBytes!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: _webImageBytes == null
+                            ? const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.camera_alt,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 24),
+                                  Text(
+                                    'Sonriele a la vida',
+                                    style: TextStyle(
+                                        color: Colors.grey, fontSize: 15),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFF0A66C2),
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
               const Text(
                 'Crea tu cuenta profesional',
                 style: TextStyle(
@@ -935,7 +1029,51 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
+// Opciones de Género Verticales
+              const Text(
+                'Género',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              RadioListTile<String>(
+                title: const Text('Masculino', style: TextStyle(fontSize: 14)),
+                value: 'Masculino',
+                groupValue: _generoSeleccionado,
+                contentPadding: EdgeInsets.zero,
+                onChanged: (value) {
+                  setState(() {
+                    _generoSeleccionado = value;
+                  });
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Femenino', style: TextStyle(fontSize: 14)),
+                value: 'Femenino',
+                groupValue: _generoSeleccionado,
+                contentPadding: EdgeInsets.zero,
+                onChanged: (value) {
+                  setState(() {
+                    _generoSeleccionado = value;
+                  });
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Otro / Prefiero no decirlo',
+                    style: TextStyle(fontSize: 14)),
+                value: 'Otro / Prefiero no decirlo',
+                groupValue: _generoSeleccionado,
+                contentPadding: EdgeInsets.zero,
+                onChanged: (value) {
+                  setState(() {
+                    _generoSeleccionado = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
               // Contraseña
               TextField(
                 controller: _passwordController,
