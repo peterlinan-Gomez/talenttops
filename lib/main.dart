@@ -729,32 +729,40 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
       final User? user = response.user;
 
       if (user != null) {
-        if (_webImageBytes != null) {
-          final fileName =
-              '${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        try {
+          if (_webImageBytes != null) {
+            final fileName =
+                '${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-          await Supabase.instance.client.storage
-              .from('avatars')
-              .uploadBinary(fileName, _webImageBytes!);
+            await Supabase.instance.client.storage
+                .from('avatars')
+                .uploadBinary(fileName, _webImageBytes!);
 
-          _fotoUrl = Supabase.instance.client.storage
-              .from('avatars')
-              .getPublicUrl(fileName);
-        } else {
-          _fotoUrl = '';
+            _fotoUrl = Supabase.instance.client.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+          } else {
+            _fotoUrl = '';
+          }
+
+          debugPrint("Intentando guardar en la tabla user...");
+
+          await Supabase.instance.client.from('user').upsert({
+            'id': user.id,
+            'full_name': _nombreController.text.trim(),
+            'email': _correoController.text.trim(),
+            'pais': _paisSeleccionado,
+            'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
+            'documento': _documentoController.text.trim(),
+            'ruc': _rucController.text.trim(),
+            'genero': _generoSeleccionado ?? 'No especificado',
+            'foto': _fotoUrl,
+          });
+
+          debugPrint("¡Guardado exitoso en la tabla user!");
+        } catch (e) {
+          debugPrint("ERROR CRITICO AL GUARDAR EN USER: $e");
         }
-
-        await Supabase.instance.client.from('user').upsert({
-          'id': user.id,
-          'full_name': _nombreController.text.trim(),
-          'email': _correoController.text.trim(),
-          'pais': _paisSeleccionado,
-          'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
-          'documento': _documentoController.text.trim(),
-          'ruc': _rucController.text.trim(),
-          'genero': _generoSeleccionado ?? 'No especificado',
-          'foto': _fotoUrl,
-        });
       }
 
       if (!mounted) return;
