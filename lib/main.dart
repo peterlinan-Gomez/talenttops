@@ -740,6 +740,8 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
           _fotoUrl = Supabase.instance.client.storage
               .from('avatars')
               .getPublicUrl(fileName);
+        } else {
+          _fotoUrl = '';
         }
 
         await Supabase.instance.client.from('user').upsert({
