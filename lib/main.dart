@@ -736,15 +736,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
       final AuthResponse response = await Supabase.instance.client.auth.signUp(
         email: _correoController.text.trim(),
         password: _passwordController.text.trim(),
-        data: {
-          'full_name': _nombreController.text.trim(),
-          'pais': _paisSeleccionado,
-          'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
-          'documento': _documentoController.text.trim(),
-          'ruc': _rucController.text.trim(),
-          'genero': _generoSeleccionado ?? 'No especificado',
-          'foto': _fotoUrl ?? '',
-        },
       );
 
       final currentUser =
