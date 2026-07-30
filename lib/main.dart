@@ -793,12 +793,11 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                     borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
+                Navigator.pop(context); // Cierra el diálogo actual
+                Navigator.pushNamedAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const SimuladorCorreoScreen(),
-                  ),
+                  '/', // O la ruta de tu pantalla de inicio/login
+                  (route) => false,
                 );
               },
               child: const Text('Enviar correo de confirmación',
@@ -1123,7 +1122,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Regístrate con tu correo',
+                  'Recibir correo de confirmación de cuenta',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2585,83 +2584,6 @@ class TableroMisionesScreen extends StatelessWidget {
                     ),
                   );
                 },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SimuladorCorreoScreen extends StatelessWidget {
-  const SimuladorCorreoScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bandeja de Entrada (Simulador)'),
-        backgroundColor: const Color(0xFF0A66C2),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(
-              Icons.mark_email_read_outlined,
-              size: 80,
-              color: Color(0xFF0A66C2),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'De: soporte@talenttops.com',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Confirma tu solicitud de registro',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Has solicitado registrarte en Talenttops. Haz clic en el botón de abajo para aceptar la solicitud y activar tu cuenta.',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                // Mensaje de éxito de activación y regreso o pase
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('¡Solicitud aceptada! Cuenta activada con éxito.'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-
-                // Regresar al inicio o mandar a la pantalla principal
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
-              child: const Text(
-                'Aceptar solicitud',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
               ),
             ),
           ],
