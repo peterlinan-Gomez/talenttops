@@ -742,7 +742,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
               .getPublicUrl(fileName);
         }
 
-        await Supabase.instance.client.from('user').insert({
+        await Supabase.instance.client.from('user').upsert({
           'id': user.id,
           'full_name': _nombreController.text.trim(),
           'email': _correoController.text.trim(),
