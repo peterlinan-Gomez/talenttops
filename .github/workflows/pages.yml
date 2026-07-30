@@ -26,7 +26,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --release --base-href "/talenttops/"
+        run: flutter build web --release --base-href "/"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -36,6 +36,14 @@ jobs:
         with:
           path: './build/web'
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
