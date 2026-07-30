@@ -718,30 +718,39 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
     }
 
     try {
+      if (_webImageBytes != null) {
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        await Supabase.instance.client.storage
+            .from('avatars')
+            .uploadBinary(fileName, _webImageBytes!);
+
+        _fotoUrl = Supabase.instance.client.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+      } else {
+        _fotoUrl = '';
+      }
+
+      // Registro con envío de metadatos completos para que el Trigger los recoja de golpe
       final AuthResponse response = await Supabase.instance.client.auth.signUp(
         email: _correoController.text.trim(),
         password: _passwordController.text.trim(),
+        data: {
+          'full_name': _nombreController.text.trim(),
+          'pais': _paisSeleccionado,
+          'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
+          'documento': _documentoController.text.trim(),
+          'ruc': _rucController.text.trim(),
+          'genero': _generoSeleccionado ?? 'No especificado',
+          'foto': _fotoUrl ?? '',
+        },
       );
 
       final currentUser =
           response.user ?? Supabase.instance.client.auth.currentUser;
 
       if (currentUser != null) {
-        if (_webImageBytes != null) {
-          final fileName =
-              '${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-          await Supabase.instance.client.storage
-              .from('avatars')
-              .uploadBinary(fileName, _webImageBytes!);
-
-          _fotoUrl = Supabase.instance.client.storage
-              .from('avatars')
-              .getPublicUrl(fileName);
-        } else {
-          _fotoUrl = '';
-        }
-
         await Supabase.instance.client.from('user').upsert({
           'id': currentUser.id,
           'full_name': _nombreController.text.trim(),
@@ -757,7 +766,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
 
       if (!mounted) return;
 
-      // Navegar al filtro de experiencia enviando el género seleccionado en minúsculas
       String generoParam = 'masculino';
       if (_generoSeleccionado == 'Femenino') {
         generoParam = 'femenino';
@@ -1069,7 +1077,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Registrar y Continuar',
+                  'Enviar correo de confirmación',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
