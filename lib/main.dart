@@ -45,7 +45,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   List<Widget> _getScreens(BuildContext context) {
     return [
-      const SocialFeedScreen(), // El corazón de Talenttops: Red Social
+      const SocialFeedScreen(),
       const Center(
           child: Text('📅 Servicios, Contratos e Impuestos',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
@@ -443,6 +443,10 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                     child: Image.asset(
                       'assets/icon/Logo_Talenttops.png',
                       height: 200,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.star,
+                            size: 100, color: Color(0xFF0A66C2));
+                      },
                     ),
                   ),
                 ),
@@ -703,6 +707,16 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
       return;
     }
 
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Las contraseñas no coinciden'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     try {
       final AuthResponse response = await Supabase.instance.client.auth.signUp(
         email: _correoController.text.trim(),
@@ -728,9 +742,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
           _fotoUrl = '';
         }
 
-        debugPrint(
-            "Intentando guardar en la tabla user para ID: ${currentUser.id}");
-
         await Supabase.instance.client.from('user').upsert({
           'id': currentUser.id,
           'full_name': _nombreController.text.trim(),
@@ -742,53 +753,25 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
           'genero': _generoSeleccionado ?? 'No especificado',
           'foto': _fotoUrl,
         });
-
-        debugPrint("¡Guardado exitoso en la tabla user!");
       }
 
       if (!mounted) return;
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.mark_email_unread_rounded, color: Color(0xFF0A66C2)),
-              SizedBox(width: 8),
-              Text('¡Verifica tu cuenta!'),
-            ],
-          ),
-          content: const Text(
-            'Hemos enviado un correo electrónico de confirmación a tu bandeja de entrada.\n\n'
-            'Haz clic en el botón del mensaje para activar tu cuenta.',
-            style: TextStyle(fontSize: 14, height: 1.4),
-          ),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0A66C2),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/',
-                  (route) => false,
-                );
-              },
-              child:
-                  const Text('Aceptar', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+      // Navegar al filtro de experiencia enviando el género seleccionado en minúsculas
+      String generoParam = 'masculino';
+      if (_generoSeleccionado == 'Femenino') {
+        generoParam = 'femenino';
+      } else if (_generoSeleccionado == 'Otro / Prefiero no decirlo') {
+        generoParam = 'otros';
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FiltroExperienciaScreen(genero: generoParam),
         ),
       );
     } catch (e) {
-      debugPrint("ERROR AL GUARDAR EN USER: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error en el registro: $e'),
@@ -841,11 +824,11 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                                     size: 40,
                                     color: Colors.grey,
                                   ),
-                                  SizedBox(height: 24),
+                                  SizedBox(height: 8),
                                   Text(
-                                    'Sonríele a la vida',
+                                    'Foto de perfil',
                                     style: TextStyle(
-                                        color: Colors.grey, fontSize: 15),
+                                        color: Colors.grey, fontSize: 12),
                                     textAlign: TextAlign.center,
                                   ),
                                 ],
@@ -1086,7 +1069,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Recibir correo de confirmación de cuenta',
+                  'Registrar y Continuar',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2569,7 +2552,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  void _iniciarSesion() {
+  Future<void> _iniciarSesion() async {
     final correo = _correoController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -2587,7 +2570,14 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(seconds: 1), () {
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: correo,
+        password: password,
+      );
+
+      if (!mounted) return;
+
       setState(() {
         _isLoading = false;
       });
@@ -2600,7 +2590,17 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       Navigator.popUntil(context, (route) => route.isFirst);
-    });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al iniciar sesión: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
