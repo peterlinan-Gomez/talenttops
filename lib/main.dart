@@ -12,7 +12,7 @@ Future<void> main() async {
     publishableKey: 'sb_publishable__qygqExiL9toOS3Xcon3DQ_23e40KUl',
   );
 
-  runApp(const TalenttopsApp())
+  runApp(const TalenttopsApp());
 }
 
 class TalenttopsApp extends StatelessWidget {
@@ -709,7 +709,8 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
         password: _passwordController.text.trim(),
       );
 
-      final currentUser = response.user ?? Supabase.instance.client.auth.currentUser;
+      final currentUser =
+          response.user ?? Supabase.instance.client.auth.currentUser;
 
       if (currentUser != null) {
         if (_webImageBytes != null) {
@@ -727,7 +728,8 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
           _fotoUrl = '';
         }
 
-        debugPrint("Intentando guardar en la tabla user para ID: ${currentUser.id}");
+        debugPrint(
+            "Intentando guardar en la tabla user para ID: ${currentUser.id}");
 
         await Supabase.instance.client.from('user').upsert({
           'id': currentUser.id,
@@ -779,8 +781,8 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                   (route) => false,
                 );
               },
-              child: const Text('Aceptar',
-                  style: TextStyle(color: Colors.white)),
+              child:
+                  const Text('Aceptar', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
