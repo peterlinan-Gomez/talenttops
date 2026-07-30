@@ -12,7 +12,7 @@ Future<void> main() async {
     publishableKey: 'sb_publishable__qygqExiL9toOS3Xcon3DQ_23e40KUl',
   );
 
-  runApp(const TalenttopsApp());
+  runApp(const TalenttopsApp())
 }
 
 class TalenttopsApp extends StatelessWidget {
@@ -366,7 +366,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
   @override
   void initState() {
     super.initState();
-    // Controlador de animación nativo y gratuito
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -397,7 +396,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
   }
 
   void _irADesarrolloGratuito(BuildContext context) {
-    // Redirige o inicia el flujo para quienes quieren desarrollar habilidades gratis
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -428,7 +426,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // LOGO ANIMADO INTERACTIVO (Funciona como Botón)
               AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) {
@@ -451,8 +448,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                 ),
               ),
               const SizedBox(height: 8),
-
-              // LEYENDA DE LLAMADO A LA ACCIÓN (Desarrolla tu talento gratis)
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -474,7 +469,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                 ),
               ),
               const SizedBox(height: 10),
-
               const Text(
                 'Conecta tu Talento al Mundo',
                 textAlign: TextAlign.center,
@@ -494,8 +488,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Botón de Ingresar
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.push(
@@ -550,8 +542,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Divisor visual
               const Row(
                 children: [
                   Expanded(child: Divider()),
@@ -566,8 +556,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                 ],
               ),
               const SizedBox(height: 20),
-
-              // 2. Google
               ElevatedButton.icon(
                 onPressed: () {
                   _simularLoginSocial(context, 'Google');
@@ -587,8 +575,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                 ),
               ),
               const SizedBox(height: 12),
-
-              // 3. Facebook
               ElevatedButton.icon(
                 onPressed: () {
                   _simularLoginSocial(context, 'Facebook');
@@ -610,8 +596,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
                 ),
               ),
               const SizedBox(height: 12),
-
-              // 4. LinkedIn
               OutlinedButton.icon(
                 onPressed: () {
                   _simularLoginSocial(context, 'LinkedIn');
@@ -643,7 +627,6 @@ class _AccesoMisionesScreenState extends State<AccesoMisionesScreen>
 // ==========================================
 // REGISTRO WEB PÚBLICO (SeleccionGeneroScreen)
 // ==========================================
-
 class SeleccionGeneroScreen extends StatefulWidget {
   const SeleccionGeneroScreen({super.key});
 
@@ -652,11 +635,12 @@ class SeleccionGeneroScreen extends StatefulWidget {
 }
 
 class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
-  String _paisSeleccionado = 'PE'; // Código por defecto para Perú
-  String _codigoTelefono = '+51'; // Código telefónico por defecto
+  String _paisSeleccionado = 'PE';
+  String _codigoTelefono = '+51';
   String? _generoSeleccionado;
   Uint8List? _webImageBytes;
   String? _fotoUrl;
+
   Future<void> _seleccionarFoto() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
@@ -682,7 +666,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // Lista de países de América con códigos ISO y prefijos telefónicos oficiales
   final List<Map<String, String>> _paisesAmerica = [
     {'codigo': 'AR', 'nombre': 'Argentina', 'prefijo': '+54'},
     {'codigo': 'BO', 'nombre': 'Bolivia', 'prefijo': '+591'},
@@ -726,43 +709,39 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
         password: _passwordController.text.trim(),
       );
 
-      final User? user = response.user;
+      final currentUser = response.user ?? Supabase.instance.client.auth.currentUser;
 
-      if (user != null) {
-        try {
-          if (_webImageBytes != null) {
-            final fileName =
-                '${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      if (currentUser != null) {
+        if (_webImageBytes != null) {
+          final fileName =
+              '${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-            await Supabase.instance.client.storage
-                .from('avatars')
-                .uploadBinary(fileName, _webImageBytes!);
+          await Supabase.instance.client.storage
+              .from('avatars')
+              .uploadBinary(fileName, _webImageBytes!);
 
-            _fotoUrl = Supabase.instance.client.storage
-                .from('avatars')
-                .getPublicUrl(fileName);
-          } else {
-            _fotoUrl = '';
-          }
-
-          debugPrint("Intentando guardar en la tabla user...");
-
-          await Supabase.instance.client.from('user').upsert({
-            'id': user.id,
-            'full_name': _nombreController.text.trim(),
-            'email': _correoController.text.trim(),
-            'pais': _paisSeleccionado,
-            'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
-            'documento': _documentoController.text.trim(),
-            'ruc': _rucController.text.trim(),
-            'genero': _generoSeleccionado ?? 'No especificado',
-            'foto': _fotoUrl,
-          });
-
-          debugPrint("¡Guardado exitoso en la tabla user!");
-        } catch (e) {
-          debugPrint("ERROR CRITICO AL GUARDAR EN USER: $e");
+          _fotoUrl = Supabase.instance.client.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+        } else {
+          _fotoUrl = '';
         }
+
+        debugPrint("Intentando guardar en la tabla user para ID: ${currentUser.id}");
+
+        await Supabase.instance.client.from('user').upsert({
+          'id': currentUser.id,
+          'full_name': _nombreController.text.trim(),
+          'email': _correoController.text.trim(),
+          'pais': _paisSeleccionado,
+          'telefono': '$_codigoTelefono ${_telefonoController.text.trim()}',
+          'documento': _documentoController.text.trim(),
+          'ruc': _rucController.text.trim(),
+          'genero': _generoSeleccionado ?? 'No especificado',
+          'foto': _fotoUrl,
+        });
+
+        debugPrint("¡Guardado exitoso en la tabla user!");
       }
 
       if (!mounted) return;
@@ -782,7 +761,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
           ),
           content: const Text(
             'Hemos enviado un correo electrónico de confirmación a tu bandeja de entrada.\n\n'
-            'Haz clic en el botón "Aceptar solicitud" del mensaje para activar tu cuenta.',
+            'Haz clic en el botón del mensaje para activar tu cuenta.',
             style: TextStyle(fontSize: 14, height: 1.4),
           ),
           actions: [
@@ -793,20 +772,21 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                     borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
-                Navigator.pop(context); // Cierra el diálogo actual
+                Navigator.pop(context);
                 Navigator.pushNamedAndRemoveUntil(
                   context,
-                  '/', // O la ruta de tu pantalla de inicio/login
+                  '/',
                   (route) => false,
                 );
               },
-              child: const Text('Enviar correo de confirmación',
+              child: const Text('Aceptar',
                   style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
       );
     } catch (e) {
+      debugPrint("ERROR AL GUARDAR EN USER: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error en el registro: $e'),
@@ -861,7 +841,7 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                                   ),
                                   SizedBox(height: 24),
                                   Text(
-                                    'Sonriele a la vida',
+                                    'Sonríele a la vida',
                                     style: TextStyle(
                                         color: Colors.grey, fontSize: 15),
                                     textAlign: TextAlign.center,
@@ -905,8 +885,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 style: TextStyle(fontSize: 14, color: Colors.black54),
               ),
               const SizedBox(height: 30),
-
-              // Nombre completo
               TextField(
                 controller: _nombreController,
                 decoration: InputDecoration(
@@ -918,8 +896,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Correo electrónico
               TextField(
                 controller: _correoController,
                 keyboardType: TextInputType.emailAddress,
@@ -932,8 +908,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Selector de País con Banderas y actualización de prefijo
               DropdownButtonFormField<String>(
                 value: _paisSeleccionado,
                 decoration: InputDecoration(
@@ -971,8 +945,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 },
               ),
               const SizedBox(height: 16),
-
-              // Fila de Número Telefónico con Prefijo de País Automático
               Row(
                 children: [
                   Container(
@@ -1008,8 +980,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Documento de identidad
               TextField(
                 controller: _documentoController,
                 keyboardType: TextInputType.text,
@@ -1022,8 +992,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // RUC (Opcional)
               TextField(
                 controller: _rucController,
                 keyboardType: TextInputType.number,
@@ -1038,7 +1006,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-// Opciones de Género Verticales
               const Text(
                 'Género',
                 style: TextStyle(
@@ -1083,7 +1050,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              // Contraseña
               TextField(
                 controller: _passwordController,
                 obscureText: true,
@@ -1096,8 +1062,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Confirmar Contraseña
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: true,
@@ -1110,8 +1074,6 @@ class _SeleccionGeneroScreenState extends State<SeleccionGeneroScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Botón de Registro
               ElevatedButton(
                 onPressed: _procesarRegistro,
                 style: ElevatedButton.styleFrom(
